@@ -19,7 +19,7 @@ const usersCol = collection(db, "users");
 const ordersCol = collection(db, "orders");
 const topUpsCol = collection(db, "topups");
 
-// ---- USERS ----
+// ---------------- USERS ----------------
 
 export async function ensureUserProfile(
   uid: string,
@@ -118,7 +118,7 @@ export async function setUserBan(
   });
 }
 
-// ---- ORDERS ----
+// ---------------- ORDERS ----------------
 
 export async function createOrder(order: Omit<Order, "id" | "createdAt">) {
   return addDoc(ordersCol, {
@@ -151,7 +151,7 @@ export async function getAllOrders(): Promise<Order[]> {
   })) as Order[];
 }
 
-// ---- TOPUPS ----
+// ---------------- TOPUPS ----------------
 
 export async function createTopUpRequest(
   data: Omit<TopUpRequest, "id" | "createdAt" | "status">
@@ -181,7 +181,7 @@ export async function setTopUpStatus(
   });
 }
 
-// ---- ADMIN ----
+// ---------------- ADMIN ----------------
 
 export function isAdminUid(uid: string | null | undefined): boolean {
   if (!uid) return false;
