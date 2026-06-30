@@ -238,3 +238,4 @@ export function isAdminUid(
 
   return list.includes(uid);
 }
+
