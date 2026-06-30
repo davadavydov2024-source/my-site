@@ -1,4 +1,3 @@
-
 import {
   collection,
   doc,
@@ -20,24 +19,26 @@ const usersCol = collection(db, "users");
 const ordersCol = collection(db, "orders");
 const topUpsCol = collection(db, "topups");
 
-// ---- Users ----
+// ---- USERS ----
 
 export async function ensureUserProfile(
   uid: string,
   email: string,
   displayName: string,
   photoURL?: string
-) {
+): Promise<UserProfile> {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
 
   if (snap.exists()) {
     await updateDoc(ref, { lastLoginAt: Date.now() });
 
+    const data = snap.data() as Omit<UserProfile, "uid">;
+
     return {
       uid: snap.id,
-      ...snap.data(),
-    } as UserProfile;
+      ...data,
+    };
   }
 
   const profile: Omit<UserProfile, "uid"> = {
@@ -57,29 +58,33 @@ export async function ensureUserProfile(
   return {
     uid,
     ...profile,
-  } as UserProfile;
+  };
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, "users", uid));
+
   if (!snap.exists()) return null;
+
+  const data = snap.data() as Omit<UserProfile, "uid">;
 
   return {
     uid,
-    ...snap.data(),
-  } as UserProfile;
+    ...data,
+  };
 }
 
 export async function getAllUsers(): Promise<UserProfile[]> {
   const snap = await getDocs(query(usersCol, orderBy("createdAt", "desc")));
 
-  return snap.docs.map(
-    (d) =>
-      ({
-        uid: d.id,
-        ...d.data(),
-      }) as UserProfile
-  );
+  return snap.docs.map((d) => {
+    const data = d.data() as Omit<UserProfile, "uid">;
+
+    return {
+      uid: d.id,
+      ...data,
+    };
+  });
 }
 
 export async function setUserBalance(uid: string, newBalance: number) {
@@ -113,7 +118,7 @@ export async function setUserBan(
   });
 }
 
-// ---- Orders ----
+// ---- ORDERS ----
 
 export async function createOrder(order: Omit<Order, "id" | "createdAt">) {
   return addDoc(ordersCol, {
@@ -131,28 +136,22 @@ export async function getOrdersForUser(userId: string): Promise<Order[]> {
     )
   );
 
-  return snap.docs.map(
-    (d) =>
-      ({
-        id: d.id,
-        ...d.data(),
-      }) as Order
-  );
+  return snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  })) as Order[];
 }
 
 export async function getAllOrders(): Promise<Order[]> {
   const snap = await getDocs(query(ordersCol, orderBy("createdAt", "desc")));
 
-  return snap.docs.map(
-    (d) =>
-      ({
-        id: d.id,
-        ...d.data(),
-      }) as Order
-  );
+  return snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  })) as Order[];
 }
 
-// ---- Top-ups ----
+// ---- TOPUPS ----
 
 export async function createTopUpRequest(
   data: Omit<TopUpRequest, "id" | "createdAt" | "status">
@@ -167,13 +166,10 @@ export async function createTopUpRequest(
 export async function getTopUpRequests(): Promise<TopUpRequest[]> {
   const snap = await getDocs(query(topUpsCol, orderBy("createdAt", "desc")));
 
-  return snap.docs.map(
-    (d) =>
-      ({
-        id: d.id,
-        ...d.data(),
-      }) as TopUpRequest
-  );
+  return snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  })) as TopUpRequest[];
 }
 
 export async function setTopUpStatus(
@@ -185,7 +181,7 @@ export async function setTopUpStatus(
   });
 }
 
-// ---- Admin ----
+// ---- ADMIN ----
 
 export function isAdminUid(uid: string | null | undefined): boolean {
   if (!uid) return false;
