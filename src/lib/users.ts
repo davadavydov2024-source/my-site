@@ -1,39 +1,5 @@
-export async function ensureUserProfile(
-  uid: string,
-  email: string,
-  displayName: string,
-  photoURL?: string
-) {
-  const ref = doc(db, "users", uid);
-  const snap = await getDoc(ref);
 
-  if (snap.exists()) {
-    await updateDoc(ref, { lastLoginAt: Date.now() });
-    return {
-      uid: snap.id,
-      ...snap.data(),
-    } as UserProfile;
-  }
-
-  const profile: Omit<UserProfile, "uid"> = {
-    email,
-    displayName,
-    photoURL: photoURL ?? null,
-    balance: 0,
-    badges: ["user"],
-    emailVerified: false,
-    banned: false,
-    createdAt: Date.now(),
-    lastLoginAt: Date.now(),
-  };
-
-  await setDoc(ref, profile);
-
-  return {
-    uid,
-    ...profile,
-  } as UserProfile;
-}import {
+import {
   collection,
   doc,
   getDoc,
@@ -46,12 +12,15 @@ export async function ensureUserProfile(
   addDoc,
   increment,
 } from "firebase/firestore";
+
 import { db } from "./firebase";
 import { Order, TopUpRequest, UserProfile, UserBadge } from "@/types";
 
 const usersCol = collection(db, "users");
 const ordersCol = collection(db, "orders");
 const topUpsCol = collection(db, "topups");
+
+// ---- Users ----
 
 export async function ensureUserProfile(
   uid: string,
@@ -102,9 +71,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 }
 
 export async function getAllUsers(): Promise<UserProfile[]> {
-  const snap = await getDocs(
-    query(usersCol, orderBy("createdAt", "desc"))
-  );
+  const snap = await getDocs(query(usersCol, orderBy("createdAt", "desc")));
 
   return snap.docs.map(
     (d) =>
@@ -155,9 +122,7 @@ export async function createOrder(order: Omit<Order, "id" | "createdAt">) {
   });
 }
 
-export async function getOrdersForUser(
-  userId: string
-): Promise<Order[]> {
+export async function getOrdersForUser(userId: string): Promise<Order[]> {
   const snap = await getDocs(
     query(
       ordersCol,
@@ -176,9 +141,7 @@ export async function getOrdersForUser(
 }
 
 export async function getAllOrders(): Promise<Order[]> {
-  const snap = await getDocs(
-    query(ordersCol, orderBy("createdAt", "desc"))
-  );
+  const snap = await getDocs(query(ordersCol, orderBy("createdAt", "desc")));
 
   return snap.docs.map(
     (d) =>
@@ -189,7 +152,7 @@ export async function getAllOrders(): Promise<Order[]> {
   );
 }
 
-// ---- Top-up requests ----
+// ---- Top-ups ----
 
 export async function createTopUpRequest(
   data: Omit<TopUpRequest, "id" | "createdAt" | "status">
@@ -202,9 +165,7 @@ export async function createTopUpRequest(
 }
 
 export async function getTopUpRequests(): Promise<TopUpRequest[]> {
-  const snap = await getDocs(
-    query(topUpsCol, orderBy("createdAt", "desc"))
-  );
+  const snap = await getDocs(query(topUpsCol, orderBy("createdAt", "desc")));
 
   return snap.docs.map(
     (d) =>
@@ -224,11 +185,9 @@ export async function setTopUpStatus(
   });
 }
 
-// ---- Admin check ----
+// ---- Admin ----
 
-export function isAdminUid(
-  uid: string | null | undefined
-): boolean {
+export function isAdminUid(uid: string | null | undefined): boolean {
   if (!uid) return false;
 
   const list = (process.env.NEXT_PUBLIC_ADMIN_UIDS ?? "")
@@ -238,4 +197,3 @@ export function isAdminUid(
 
   return list.includes(uid);
 }
-
